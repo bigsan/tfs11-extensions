@@ -13,7 +13,17 @@ TFS.module("Bigsan.TFSExtensions.EnhancedTaskBoard", ["TFS.Host"], function () {
 
 	function addWorkItemId() {
 		$(".tbTile, .taskboard-parent[id]").each(function (idx, el) {
-			$(".witTitle", el).prepend("<strong>" + el.id.match(/\d+$/)[0] + "</strong> - ");
+			var targets = $(el);
+			if($(el).is(".taskboard-parent")) {
+				var summaryRow = $(el).closest(".taskboard-row").next();
+				targets = targets.add(summaryRow);
+			}
+			if(targets.find(".witTitle .wiid").length === 0) {
+				targets.find(".witTitle").prepend("<strong class='wiid' /> - ");
+			}
+
+			var id = el.id.match(/\d+$/)[0];
+			targets.find(".witTitle .wiid").text(id);
 		});
 	}
 
