@@ -1,39 +1,56 @@
 TFS.module("Bigsan.TFSExtensions.EnhancedTaskBoard", ["TFS.Host"], function () {
-    var tiles = $(".tbTile");
-    var allIds = tiles.map(function () { return "ids=" + this.id.match(/\d+$/)[0]; }).get();
-    var collectionUrl = location.pathname.match(/\/tfs\/[^\/]+/i)[0]; // ex: "/tfs/DefaultCollection"
-    var queryUrl = collectionUrl + "/_api/_wit/workitems?__v=1&" + allIds.join("&");
 
-    // add css rule
-    var styleHtml = [
-        '<style id="etb" type="text/css">',
-        '.daysAgo { float: left; padding: 0 4px; color: white; background: darkgreen; }',
-        '.daysAgo.recent { background: darkred; }',
-        '.wiid { }',
-        '</style>'
-    ].join("");
-    $("head").append(styleHtml);
+	function addCssRules() {
+		var styleHtml = [
+			'<style id="etb" type="text/css">',
+			'.daysAgo { float: left; padding: 0 4px; color: white; background: darkgreen; }',
+			'.daysAgo.recent { background: darkred; }',
+			'.wiid { }',
+			'</style>'
+		].join("");
+		$("head").append(styleHtml);
+	}
 
-    // add work item id
-    tiles.add('.taskboard-cell.taskboard-parent[id]').each(function (idx, el) {
-        $(".witTitle", el).prepend("<strong>" + el.id.match(/\d+$/)[0] + "</strong> - ");
-    });
+	function addWorkItemId() {
+		$(".tbTile, .taskboard-parent[id]").each(function (idx, el) {
+			$(".witTitle", el).prepend("<strong>" + el.id.match(/\d+$/)[0] + "</strong> - ");
+		});
+	}
 
-    // add last modified date
-    $.getJSON(queryUrl, function (d) {
-        var items = d.__wrappedArray;
-        var now = new Date();
-        $.each(items, function (idx, item) {
-            var tick = parseInt(item.fields["3"].match(/\d+/)[0], 10);
-            var id = item.fields["-3"];
-            var date = new Date(tick);
-            var msecs = now.getTime() - date.getTime();
-            var daysAgo = Math.ceil(msecs / 86400000);
-            var daysAgoDiv = $("<div class='daysAgo'>" + daysAgo + "d</div>")
-                .attr("title", date.toString());
-            if (daysAgo < 2) daysAgoDiv.addClass("recent");
+	function getAllIds() {
+		return $(".tbTile, .taskboard-parent[id]").map(function (idx, item) { return item.id.match(/\d+$/)[0]; }).get();
+	}
 
-            $("#tile-" + id).find(".witExtra").prepend(daysAgoDiv);
-        });
-    });
+	function getWitQueryUrl(ids) {
+		var collectionUrl = location.pathname.match(/\/tfs\/[^\/]+/i)[0];
+		var idsQuery = $.map(ids, function (item, idx) { return "ids=" + item; }).join("&");
+		return collectionUrl + "/_api/_wit/workitems?__v=1&" + idsQuery;
+	}
+
+	function queryWorkItems(ids, callback) {
+		var queryUrl = getWitQueryUrl(ids);
+		$.getJSON(queryUrl, function (d) {
+			callback(d.__wrappedArray);
+		});
+	}
+
+	addCssRules();
+	addWorkItemId();
+
+	var ids = getAllIds();
+	queryWorkItems(ids, function (workitems) {
+		var now = new Date();
+		$.each(workitems, function (idx, item) {
+			var tick = parseInt(item.fields["3"].match(/\d+/)[0], 10);
+			var id = item.fields["-3"];
+			var date = new Date(tick);
+			var msecsAgo = now.getTime() - date.getTime();
+			var daysAgo = Math.ceil(msecsAgo / 86400000);
+			var daysAgoDiv = $("<div class='daysAgo'>" + daysAgo + "d</div>").attr("title", date.toString());
+			if(daysAgo < 2) {
+				daysAgoDiv.addClass("recent");
+			}
+			$("#tile-" + id).find(".witExtra").prepend(daysAgoDiv);
+		});
+	});
 });
