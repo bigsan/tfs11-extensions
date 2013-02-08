@@ -37,7 +37,7 @@ TFS.module("Bigsan.TFSExtensions.EnhancedTaskBoard", [
         $("#tile-" + id).find(".witExtra").prepend(daysAgoDiv);
         var row = $("#taskboard-table_p" + id);
         var summaryRow = row.closest(".taskboard-row").next();
-        row.add(summaryRow).find(".witTitle").before(daysAgoDiv);
+        row.add(summaryRow).find(".witTitle").prevAll().remove().end().before(daysAgoDiv);
     }
     function getAllIds() {
         return $(".tbTile, .taskboard-parent[id]").map(function (idx, item) {
@@ -69,4 +69,16 @@ TFS.module("Bigsan.TFSExtensions.EnhancedTaskBoard", [
     });
     addCssRules();
     addIdToWorkItems(ids);
+    var wiManager = TFS.OM.TfsTeamProjectCollection.getDefault().getService(TFS.WorkItemTracking.WorkItemStore).workItemManager;
+    wiManager.attachWorkItemChanged(function (sender, ea) {
+        if(ea.change == "reset" || ea.change == "save-completed") {
+            var wi = ea.workItem;
+            var id = wi.getFieldValue("System.Id");
+            var changedDate = wi.getFieldValue("System.ChangedDate").value;
+            window.setTimeout(function () {
+                addIdToWorkItem(id);
+                addDaysAgoToWorkItem(id, changedDate);
+            }, 500);
+        }
+    });
 });
