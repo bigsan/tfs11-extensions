@@ -4,6 +4,8 @@ declare var __uiCulture: string;
 
 TFS.module("Bigsan.TFSExtensions.EnhancedTaskBoard", ["TFS.Host"], function () {
 
+	var wiManager: WorkItemManagerInterface = TFS.OM.TfsTeamProjectCollection.getDefault().getService(TFS.WorkItemTracking.WorkItemStore).workItemManager;
+
 	function addCssRules() {
 		var styleHtml = ['<style id="etb" type="text/css">',
 						'.daysAgo { float: left; padding: 0 4px; color: white; background: darkgreen; }',
@@ -59,21 +61,18 @@ TFS.module("Bigsan.TFSExtensions.EnhancedTaskBoard", ["TFS.Host"], function () {
 	}
 
 	function queryWorkItems(ids: string[], callback: (wit_array: any[]) => {}): void {
-		var queryUrl = getWitQueryUrl(ids);
-
-		$.getJSON(queryUrl, function (d) {
-			callback(d.__wrappedArray);
+		wiManager.beginGetWorkItems(ids, (items) => {
+			callback(items);
 		});
 	}
 
 	var ids = getAllIds();
 	queryWorkItems(ids, (workitems) => {
 		var now = new Date();
-		$.each(workitems, function (idx, item) {
-			var id = item.fields["-3"];
-			var tick = parseInt(item.fields["3"].match(/\d+/)[0], 10);
-			var date = new Date(tick);
-			addDaysAgoToWorkItem(id, date);
+		$.each(workitems, function (idx, wi) {
+			var id = wi.getFieldValue("System.Id");
+			var changedDate = wi.getFieldValue("System.ChangedDate").value;
+			addDaysAgoToWorkItem(id, changedDate);
 		});
 	});
 
@@ -81,7 +80,6 @@ TFS.module("Bigsan.TFSExtensions.EnhancedTaskBoard", ["TFS.Host"], function () {
 	addIdToWorkItems(ids);
 
 	// attach work item changed event
-	var wiManager: WorkItemManagerInterface = TFS.OM.TfsTeamProjectCollection.getDefault().getService(TFS.WorkItemTracking.WorkItemStore).workItemManager;
 	wiManager.attachWorkItemChanged((sender, ea) => {
 		if (ea.change == "reset" || ea.change == "save-completed") {
 			var wi = ea.workItem;

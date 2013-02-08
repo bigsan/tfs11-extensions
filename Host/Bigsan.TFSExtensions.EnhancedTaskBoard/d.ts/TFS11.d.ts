@@ -12,6 +12,7 @@ interface WorkItemChangedEventArgsInterface {
 
 interface WorkItemManagerInterface {
 	attachWorkItemChanged(callback: (sender, ea: WorkItemChangedEventArgsInterface) => {});
+	beginGetWorkItems(ids: string[], callback: (workItems: any[]) => {});
 }
 
 interface WorkItemInterface {
