@@ -11,18 +11,20 @@ TFS.module("Bigsan.TFSExtensions.EnhancedTaskBoard", [
         ].join("");
         $("head").append(styleHtml);
     }
-    function addIdToAllWorkItems() {
-        $(".tbTile, .taskboard-parent[id]").each(function (idx, el) {
-            var targets = $(el);
-            if($(el).is(".taskboard-parent")) {
-                var summaryRow = $(el).closest(".taskboard-row").next();
-                targets = targets.add(summaryRow);
+    function addIdToWorkItem(id) {
+        var tile = $("#tile-" + id);
+        var pbi = $("#taskboard-table_p" + id);
+        var pbi_summary = pbi.closest(".taskboard-row").next();
+        tile.add(pbi).add(pbi_summary).each(function (idx, el) {
+            if($(el).find(".wiid").length == 0) {
+                $(el).find(".witTitle").prepend("<strong class='wiid' /> -");
             }
-            if(targets.find(".witTitle .wiid").length == 0) {
-                targets.find(".witTitle").prepend("<strong class='wiid' /> - ");
-            }
-            var id = el.id.match(/\d+$/)[0];
-            targets.find(".witTitle .wiid").text(id);
+            $(el).find(".witTitle .wiid").text(id);
+        });
+    }
+    function addIdToWorkItems(ids) {
+        $.each(ids, function (idx, item) {
+            addIdToWorkItem(item);
         });
     }
     function addDaysAgoToWorkItem(id, daysAgo, changedDate) {
@@ -53,9 +55,8 @@ TFS.module("Bigsan.TFSExtensions.EnhancedTaskBoard", [
             callback(d.__wrappedArray);
         });
     }
-    addCssRules();
-    addIdToAllWorkItems();
-    queryWorkItems(getAllIds(), function (workitems) {
+    var ids = getAllIds();
+    queryWorkItems(ids, function (workitems) {
         var now = new Date();
         $.each(workitems, function (idx, item) {
             var tick = parseInt(item.fields["3"].match(/\d+/)[0], 10);
@@ -66,4 +67,6 @@ TFS.module("Bigsan.TFSExtensions.EnhancedTaskBoard", [
             addDaysAgoToWorkItem(id, daysAgo, date);
         });
     });
+    addCssRules();
+    addIdToWorkItems(ids);
 });

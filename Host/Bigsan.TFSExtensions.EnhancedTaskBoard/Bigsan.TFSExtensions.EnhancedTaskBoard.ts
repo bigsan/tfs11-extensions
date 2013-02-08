@@ -12,20 +12,22 @@ TFS.module("Bigsan.TFSExtensions.EnhancedTaskBoard", ["TFS.Host"], function () {
 						'</style>'].join("");
 		$("head").append(styleHtml);
 	}
+	
+	function addIdToWorkItem(id: string) {
+		var tile = $("#tile-" + id);
+		var pbi = $("#taskboard-table_p" + id);
+		var pbi_summary = pbi.closest(".taskboard-row").next();
 
-	function addIdToAllWorkItems() {
-		// there are 3 places to add id, PBI, PBI summary and Task Tile
-		$(".tbTile, .taskboard-parent[id]").each((idx, el) => {
-			var targets = $(el);
-			if ($(el).is(".taskboard-parent")) {
-				var summaryRow = $(el).closest(".taskboard-row").next();
-				targets = targets.add(summaryRow);
-			}
-			if (targets.find(".witTitle .wiid").length == 0)
-				targets.find(".witTitle").prepend("<strong class='wiid' /> - ");
+		tile.add(pbi).add(pbi_summary).each((idx, el) => {
+			if ($(el).find(".wiid").length == 0) $(el).find(".witTitle").prepend("<strong class='wiid' /> -");
 
-			var id = el.id.match(/\d+$/)[0];
-			targets.find(".witTitle .wiid").text(id);
+			$(el).find(".witTitle .wiid").text(id);
+		});
+	}
+
+	function addIdToWorkItems(ids: string[]) {
+		$.each(ids, (idx, item) => {
+			addIdToWorkItem(item);
 		});
 	}
 
@@ -40,17 +42,17 @@ TFS.module("Bigsan.TFSExtensions.EnhancedTaskBoard", ["TFS.Host"], function () {
 		row.add(summaryRow).find(".witTitle").before(daysAgoDiv);
 	}
 
-	function getAllIds() {
+	function getAllIds(): string[] {
 		return $(".tbTile, .taskboard-parent[id]").map((idx, item) => { return item.id.match(/\d+$/)[0]; }).get();
 	}
 
-	function getWitQueryUrl(ids: string[]) {
+	function getWitQueryUrl(ids: string[]): string {
 		var collectionUrl = location.pathname.match(/\/tfs\/[^\/]+/i)[0]; // ex: "/tfs/DefaultCollection"
 		var idsQuery = $.map(ids, (item, idx) => { return "ids=" + item; }).join("&");
 		return collectionUrl + "/_api/_wit/workitems?__v=1&" + idsQuery;
 	}
 
-	function queryWorkItems(ids: string[], callback: (wit_array: any[]) => {}) {
+	function queryWorkItems(ids: string[], callback: (wit_array: any[]) => {}): void {
 		var queryUrl = getWitQueryUrl(ids);
 
 		$.getJSON(queryUrl, function (d) {
@@ -58,10 +60,8 @@ TFS.module("Bigsan.TFSExtensions.EnhancedTaskBoard", ["TFS.Host"], function () {
 		});
 	}
 
-	addCssRules();
-	addIdToAllWorkItems();
-
-	queryWorkItems(getAllIds(), (workitems) => {
+	var ids = getAllIds();
+	queryWorkItems(ids, (workitems) => {
 		var now = new Date();
 		$.each(workitems, function (idx, item) {
 			var tick = parseInt(item.fields["3"].match(/\d+/)[0], 10);
@@ -73,4 +73,7 @@ TFS.module("Bigsan.TFSExtensions.EnhancedTaskBoard", ["TFS.Host"], function () {
 			addDaysAgoToWorkItem(id, daysAgo, date);
 		});
 	});
+
+	addCssRules();
+	addIdToWorkItems(ids);
 });
