@@ -27,7 +27,9 @@ TFS.module("Bigsan.TFSExtensions.EnhancedTaskBoard", [
             addIdToWorkItem(item);
         });
     }
-    function addDaysAgoToWorkItem(id, daysAgo, changedDate) {
+    function addDaysAgoToWorkItem(id, changedDate) {
+        var msecsAgo = (new Date()).getTime() - changedDate.getTime();
+        var daysAgo = Math.ceil(msecsAgo / 86400000);
         var daysAgoDiv = $("<div class='daysAgo'>" + daysAgo + "d</div>").attr("title", changedDate.toString());
         if(daysAgo < 2) {
             daysAgoDiv.addClass("recent");
@@ -59,12 +61,10 @@ TFS.module("Bigsan.TFSExtensions.EnhancedTaskBoard", [
     queryWorkItems(ids, function (workitems) {
         var now = new Date();
         $.each(workitems, function (idx, item) {
-            var tick = parseInt(item.fields["3"].match(/\d+/)[0], 10);
             var id = item.fields["-3"];
+            var tick = parseInt(item.fields["3"].match(/\d+/)[0], 10);
             var date = new Date(tick);
-            var msecsAgo = now.getTime() - date.getTime();
-            var daysAgo = Math.ceil(msecsAgo / 86400000);
-            addDaysAgoToWorkItem(id, daysAgo, date);
+            addDaysAgoToWorkItem(id, date);
         });
     });
     addCssRules();
