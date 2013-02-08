@@ -1,7 +1,9 @@
 <WebAccess version="11.0">
-  <plugin name="Enhanced Task Board" vendor="San Chen" moreinfo="https://github.com/bigsan/tfs11-extensions" version="0.3" >
+  <plugin name="Enhanced Task Board" vendor="San Chen" moreinfo="https://github.com/bigsan/tfs11-extensions" version="0.4" >
   <modules >
     <module namespace="Bigsan.TFSExtensions.EnhancedTaskBoard" loadAfter="TFS.Agile.TaskBoard"/>
   </modules>
   </plugin>
 </WebAccess>
+
+
