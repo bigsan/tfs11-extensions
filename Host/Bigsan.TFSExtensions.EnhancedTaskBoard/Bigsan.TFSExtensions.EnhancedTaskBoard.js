@@ -11,7 +11,7 @@ TFS.module("Bigsan.TFSExtensions.EnhancedTaskBoard", [
         ].join("");
         $("head").append(styleHtml);
     }
-    function addWorkItemId() {
+    function addIdToAllWorkItems() {
         $(".tbTile, .taskboard-parent[id]").each(function (idx, el) {
             var targets = $(el);
             if($(el).is(".taskboard-parent")) {
@@ -24,6 +24,16 @@ TFS.module("Bigsan.TFSExtensions.EnhancedTaskBoard", [
             var id = el.id.match(/\d+$/)[0];
             targets.find(".witTitle .wiid").text(id);
         });
+    }
+    function addDaysAgoToWorkItem(id, daysAgo, changedDate) {
+        var daysAgoDiv = $("<div class='daysAgo'>" + daysAgo + "d</div>").attr("title", changedDate.toString());
+        if(daysAgo < 2) {
+            daysAgoDiv.addClass("recent");
+        }
+        $("#tile-" + id).find(".witExtra").prepend(daysAgoDiv);
+        var row = $("#taskboard-table_p" + id);
+        var summaryRow = row.closest(".taskboard-row").next();
+        row.add(summaryRow).find(".witTitle").before(daysAgoDiv);
     }
     function getAllIds() {
         return $(".tbTile, .taskboard-parent[id]").map(function (idx, item) {
@@ -44,9 +54,8 @@ TFS.module("Bigsan.TFSExtensions.EnhancedTaskBoard", [
         });
     }
     addCssRules();
-    addWorkItemId();
-    var ids = getAllIds();
-    queryWorkItems(ids, function (workitems) {
+    addIdToAllWorkItems();
+    queryWorkItems(getAllIds(), function (workitems) {
         var now = new Date();
         $.each(workitems, function (idx, item) {
             var tick = parseInt(item.fields["3"].match(/\d+/)[0], 10);
@@ -54,11 +63,7 @@ TFS.module("Bigsan.TFSExtensions.EnhancedTaskBoard", [
             var date = new Date(tick);
             var msecsAgo = now.getTime() - date.getTime();
             var daysAgo = Math.ceil(msecsAgo / 86400000);
-            var daysAgoDiv = $("<div class='daysAgo'>" + daysAgo + "d</div>").attr("title", date.toString());
-            if(daysAgo < 2) {
-                daysAgoDiv.addClass("recent");
-            }
-            $("#tile-" + id).find(".witExtra").prepend(daysAgoDiv);
+            addDaysAgoToWorkItem(id, daysAgo, date);
         });
     });
 });

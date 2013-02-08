@@ -13,7 +13,7 @@ TFS.module("Bigsan.TFSExtensions.EnhancedTaskBoard", ["TFS.Host"], function () {
 		$("head").append(styleHtml);
 	}
 
-	function addWorkItemId() {
+	function addIdToAllWorkItems() {
 		// there are 3 places to add id, PBI, PBI summary and Task Tile
 		$(".tbTile, .taskboard-parent[id]").each((idx, el) => {
 			var targets = $(el);
@@ -27,6 +27,17 @@ TFS.module("Bigsan.TFSExtensions.EnhancedTaskBoard", ["TFS.Host"], function () {
 			var id = el.id.match(/\d+$/)[0];
 			targets.find(".witTitle .wiid").text(id);
 		});
+	}
+
+	function addDaysAgoToWorkItem(id, daysAgo, changedDate) {
+		var daysAgoDiv = $("<div class='daysAgo'>" + daysAgo + "d</div>")
+			.attr("title", changedDate.toString());
+		if (daysAgo < 2) daysAgoDiv.addClass("recent");
+
+		$("#tile-" + id).find(".witExtra").prepend(daysAgoDiv);
+		var row = $("#taskboard-table_p" + id);
+		var summaryRow = row.closest(".taskboard-row").next();
+		row.add(summaryRow).find(".witTitle").before(daysAgoDiv);
 	}
 
 	function getAllIds() {
@@ -48,10 +59,9 @@ TFS.module("Bigsan.TFSExtensions.EnhancedTaskBoard", ["TFS.Host"], function () {
 	}
 
 	addCssRules();
-	addWorkItemId();
+	addIdToAllWorkItems();
 
-	var ids = getAllIds();
-	queryWorkItems(ids, (workitems) => {
+	queryWorkItems(getAllIds(), (workitems) => {
 		var now = new Date();
 		$.each(workitems, function (idx, item) {
 			var tick = parseInt(item.fields["3"].match(/\d+/)[0], 10);
@@ -60,11 +70,7 @@ TFS.module("Bigsan.TFSExtensions.EnhancedTaskBoard", ["TFS.Host"], function () {
 			var msecsAgo = now.getTime() - date.getTime();
 
 			var daysAgo = Math.ceil(msecsAgo / 86400000);
-			var daysAgoDiv = $("<div class='daysAgo'>" + daysAgo + "d</div>")
-				.attr("title", date.toString());
-			if (daysAgo < 2) daysAgoDiv.addClass("recent");
-
-			$("#tile-" + id).find(".witExtra").prepend(daysAgoDiv);
+			addDaysAgoToWorkItem(id, daysAgo, date);
 		});
 	});
 });
