@@ -146,6 +146,15 @@ TFS.module("Bigsan.TFSExtensions.EnhancedTaskBoard", [
     maxWksFilter.bind("changed", function (n, t) {
         toggleMaximizeWorkspace(t.value == "on");
     });
+    var hideDimmedFilter = addSelectFilter("hide dimmed tiles");
+    TFS.Host.UI.PivotFilter.ensureEnhancements(hideDimmedFilter);
+    hideDimmedFilter.bind("changed", function (n, t) {
+        if(t.value == "on") {
+            $(".tbTile:has(.tile-dimmed)").hide();
+        } else {
+            $(".tbTile:has(.tile-dimmed)").show();
+        }
+    });
     wiManager.attachWorkItemChanged(function (sender, ea) {
         if(ea.change == "reset" || ea.change == "save-completed") {
             var wi = ea.workItem;
