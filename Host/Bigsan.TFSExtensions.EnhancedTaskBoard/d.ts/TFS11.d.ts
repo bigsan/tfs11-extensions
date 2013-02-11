@@ -3,6 +3,8 @@ interface TFSInterface {
 	module(moduleName, deps, callback);
 	OM: { TfsTeamProjectCollection; };
 	WorkItemTracking: { WorkItemStore; };
+	UI;
+	Resources;
 }
 
 interface WorkItemChangedEventArgsInterface {

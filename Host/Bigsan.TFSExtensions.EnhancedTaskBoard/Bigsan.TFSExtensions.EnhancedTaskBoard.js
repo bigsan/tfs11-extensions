@@ -2,13 +2,15 @@ TFS.module("Bigsan.TFSExtensions.EnhancedTaskBoard", [
     "TFS.Host"
 ], function () {
     var wiManager = TFS.OM.TfsTeamProjectCollection.getDefault().getService(TFS.WorkItemTracking.WorkItemStore).workItemManager;
+    var res = TFS.Resources.Common;
     function addCssRules() {
         var styleHtml = [
             '<style id="etb" type="text/css">', 
             '.daysAgo { float: left; padding: 0 4px; color: white; background: darkgreen; }', 
             '.daysAgo.recent { background: darkred; }', 
             '.wiid { margin-right: 4px; }', 
-            '.task-board-summary .tbPivotItem .ellipsis { float: left; }', 
+            '.taskboard-row-summary .tbPivotItem .ellipsis { float: left; }', 
+            '.taskboard-row-summary .tbPivotItem .ellipsis .pivot-state { margin-left: 4px; }', 
             '.tbPivotItem .pivot-state { font-size: 120%; font-weight: bold; }', 
             '</style>'
         ].join("");
@@ -25,11 +27,6 @@ TFS.module("Bigsan.TFSExtensions.EnhancedTaskBoard", [
             $(el).find(".witTitle .wiid").text(id);
         });
     }
-    function addIdToWorkItems(ids) {
-        $.each(ids, function (idx, item) {
-            addIdToWorkItem(item);
-        });
-    }
     function addExtraInfoToWorkItem(id, data) {
         var msecsAgo = (new Date()).getTime() - data.changedDate.getTime();
         var daysAgo = Math.ceil(msecsAgo / 86400000);
@@ -42,6 +39,43 @@ TFS.module("Bigsan.TFSExtensions.EnhancedTaskBoard", [
         var summaryRow = row.closest(".taskboard-row").next();
         var pivotItemRows = row.add(summaryRow);
         pivotItemRows.find(".daysAgo").remove().end().find(".witTitle").before(daysAgoDiv).end().find(".pivot-state").remove().end().find(".tbPivotItem").append("<span class='pivot-state'>" + data.state + "</span>");
+    }
+    function addToolbarButtons() {
+        $(".hub-pivot-content").css("top", "+=40px");
+        $("<div class='toolbar hub-pivot-toolbar'></div>").insertAfter($(".hub-pivot"));
+        TFS.UI.Controls.Menus.MenuBar.createIn($(".hub-pivot-toolbar"), {
+            items: [
+                {
+                    id: "expandAll",
+                    text: res.ExpandAll,
+                    title: res.ExpandAllToolTip,
+                    showText: false,
+                    icon: "icon-tree-expand-all"
+                }, 
+                {
+                    id: "collapseAll",
+                    text: res.CollapseAll,
+                    title: res.CollapseAllToolTip,
+                    showText: false,
+                    icon: "icon-tree-collapse-all"
+                }
+            ],
+            executeAction: function (e) {
+                var cmd = e.get_commandName();
+                switch(cmd) {
+                    case "expandAll":
+                        $(".taskboard-row-summary::visible").each(function (idx, el) {
+                            $(el).prev().find(".taskboard-expander").click();
+                        });
+                        break;
+                    case "collapseAll":
+                        $(".taskboard-row-summary:not(:visible)").each(function (idx, el) {
+                            $(el).prev().find(".taskboard-expander").click();
+                        });
+                        break;
+                }
+            }
+        });
     }
     function getAllIds() {
         return $(".tbTile, .taskboard-parent[id]").map(function (idx, item) {
@@ -62,11 +96,11 @@ TFS.module("Bigsan.TFSExtensions.EnhancedTaskBoard", [
     }
     var ids = getAllIds();
     queryWorkItems(ids, function (workitems) {
-        var now = new Date();
         $.each(workitems, function (idx, wi) {
             var id = wi.getFieldValue("System.Id");
             var state = wi.getFieldValue("System.State");
             var changedDate = wi.getFieldValue("System.ChangedDate").value;
+            addIdToWorkItem(id);
             addExtraInfoToWorkItem(id, {
                 changedDate: changedDate,
                 state: state
@@ -74,7 +108,7 @@ TFS.module("Bigsan.TFSExtensions.EnhancedTaskBoard", [
         });
     });
     addCssRules();
-    addIdToWorkItems(ids);
+    addToolbarButtons();
     wiManager.attachWorkItemChanged(function (sender, ea) {
         if(ea.change == "reset" || ea.change == "save-completed") {
             var wi = ea.workItem;
