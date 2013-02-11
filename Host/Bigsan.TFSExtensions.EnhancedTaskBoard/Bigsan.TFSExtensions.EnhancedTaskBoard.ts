@@ -88,6 +88,32 @@ TFS.module("Bigsan.TFSExtensions.EnhancedTaskBoard", ["TFS.Host"], function () {
 		});
 	}
 
+	function addSelectFilter(title) {
+		var template = [
+			'<div class="select pivot-filter enhance" title="{title}">',
+			'<span class="title">{title}</span>',
+			'<ul class="pivot-filter-items">',
+			'<li class="pivot-filter-item" data-value="on" title="ON"><a href="#">ON</a></li>',
+			'<li class="pivot-filter-item selected" data-value="off" title="OFF"><a href="#">OFF</a></li>',
+			'</ul>',
+			'</div>'].join("");
+
+		return $(template)
+			.attr("title", title)
+			.find(".title").text(title).end()
+			.prependTo($(".filters:first"));
+	}
+
+	function toggleMaximizeWorkspace(max) {
+		if (max) {
+			$(".header-section").animate({ "margin-top": "-=91px" });
+			$(".content-section").animate({ "top": "-=91px" });
+		} else {
+			$(".header-section").animate({ "margin-top": "+=91px" });
+			$(".content-section").animate({ "top": "+=91px" });
+		}
+	}
+
 	function getAllIds(): string[] {
 		return $(".tbTile, .taskboard-parent[id]").map((idx, item) => { return item.id.match(/\d+$/)[0]; }).get();
 	}
@@ -121,6 +147,12 @@ TFS.module("Bigsan.TFSExtensions.EnhancedTaskBoard", ["TFS.Host"], function () {
 	initQuery();
 	addCssRules();
 	addToolbarButtons();
+
+	var maxWksFilter = addSelectFilter("maximize workspace");
+	TFS.Host.UI.PivotFilter.ensureEnhancements(maxWksFilter);
+	maxWksFilter.bind("changed", function (n, t) {
+		toggleMaximizeWorkspace(t.value == "on");
+	});
 
 	// attach work item changed event
 	wiManager.attachWorkItemChanged((sender, ea) => {
