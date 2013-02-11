@@ -13,7 +13,7 @@ TFS.module("Bigsan.TFSExtensions.EnhancedTaskBoard", ["TFS.Host"], function () {
 						'.daysAgo.recent { background: darkred; }',
 						'.wiid { margin-right: 4px; }',
 						'.taskboard-row-summary .tbPivotItem .ellipsis { float: left; }',
-						'.taskboard-row-summary .tbPivotItem .ellipsis .pivot-state { margin-left: 4px; }',
+						'.taskboard-row-summary .tbPivotItem .pivot-state { margin-left: 4px; }',
 						'.tbPivotItem .pivot-state { font-size: 120%; font-weight: bold; }',
 						'</style>'].join("");
 		$("head").append(styleHtml);
@@ -104,18 +104,21 @@ TFS.module("Bigsan.TFSExtensions.EnhancedTaskBoard", ["TFS.Host"], function () {
 		});
 	}
 
-	var ids = getAllIds();
-	queryWorkItems(ids, (workitems) => {
-		$.each(workitems, function (idx, wi) {
-			var id = wi.getFieldValue("System.Id");
-			var state = wi.getFieldValue("System.State");
-			var changedDate = wi.getFieldValue("System.ChangedDate").value;
+	function initQuery() {
+		var ids = getAllIds();
+		queryWorkItems(ids, (workitems) => {
+			$.each(workitems, function (idx, wi) {
+				var id = wi.getFieldValue("System.Id");
+				var state = wi.getFieldValue("System.State");
+				var changedDate = wi.getFieldValue("System.ChangedDate").value;
 
-			addIdToWorkItem(id);
-			addExtraInfoToWorkItem(id, { changedDate: changedDate, state: state });
+				addIdToWorkItem(id);
+				addExtraInfoToWorkItem(id, { changedDate: changedDate, state: state });
+			});
 		});
-	});
+	}
 
+	initQuery();
 	addCssRules();
 	addToolbarButtons();
 
@@ -133,4 +136,8 @@ TFS.module("Bigsan.TFSExtensions.EnhancedTaskBoard", ["TFS.Host"], function () {
 			}, 500);
 		}
 	});
+
+	TFS.Host.history.attachNavigate("stories", function () {
+		initQuery();
+	}, true);
 });

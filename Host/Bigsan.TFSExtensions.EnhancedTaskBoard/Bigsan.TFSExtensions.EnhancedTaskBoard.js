@@ -10,7 +10,7 @@ TFS.module("Bigsan.TFSExtensions.EnhancedTaskBoard", [
             '.daysAgo.recent { background: darkred; }', 
             '.wiid { margin-right: 4px; }', 
             '.taskboard-row-summary .tbPivotItem .ellipsis { float: left; }', 
-            '.taskboard-row-summary .tbPivotItem .ellipsis .pivot-state { margin-left: 4px; }', 
+            '.taskboard-row-summary .tbPivotItem .pivot-state { margin-left: 4px; }', 
             '.tbPivotItem .pivot-state { font-size: 120%; font-weight: bold; }', 
             '</style>'
         ].join("");
@@ -94,19 +94,22 @@ TFS.module("Bigsan.TFSExtensions.EnhancedTaskBoard", [
             callback(items);
         });
     }
-    var ids = getAllIds();
-    queryWorkItems(ids, function (workitems) {
-        $.each(workitems, function (idx, wi) {
-            var id = wi.getFieldValue("System.Id");
-            var state = wi.getFieldValue("System.State");
-            var changedDate = wi.getFieldValue("System.ChangedDate").value;
-            addIdToWorkItem(id);
-            addExtraInfoToWorkItem(id, {
-                changedDate: changedDate,
-                state: state
+    function initQuery() {
+        var ids = getAllIds();
+        queryWorkItems(ids, function (workitems) {
+            $.each(workitems, function (idx, wi) {
+                var id = wi.getFieldValue("System.Id");
+                var state = wi.getFieldValue("System.State");
+                var changedDate = wi.getFieldValue("System.ChangedDate").value;
+                addIdToWorkItem(id);
+                addExtraInfoToWorkItem(id, {
+                    changedDate: changedDate,
+                    state: state
+                });
             });
         });
-    });
+    }
+    initQuery();
     addCssRules();
     addToolbarButtons();
     wiManager.attachWorkItemChanged(function (sender, ea) {
@@ -124,4 +127,7 @@ TFS.module("Bigsan.TFSExtensions.EnhancedTaskBoard", [
             }, 500);
         }
     });
+    TFS.Host.history.attachNavigate("stories", function () {
+        initQuery();
+    }, true);
 });

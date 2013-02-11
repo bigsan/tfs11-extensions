@@ -1,10 +1,12 @@
 interface TFSInterface {
 	getModuleBase(moduleName: string);
 	module(moduleName, deps, callback);
+
+	Host;
 	OM: { TfsTeamProjectCollection; };
-	WorkItemTracking: { WorkItemStore; };
-	UI;
 	Resources;
+	UI;
+	WorkItemTracking: { WorkItemStore; };
 }
 
 interface WorkItemChangedEventArgsInterface {
