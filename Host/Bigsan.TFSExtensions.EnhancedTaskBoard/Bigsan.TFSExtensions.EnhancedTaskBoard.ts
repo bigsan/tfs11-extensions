@@ -152,9 +152,9 @@ TFS.module("Bigsan.TFSExtensions.EnhancedTaskBoard", ["TFS.Host"], function () {
 	TFS.Host.UI.PivotFilter.ensureEnhancements(hideDimmedFilter);
 	hideDimmedFilter.bind("changed", function (n, t) {
 		if (t.value == "on") {
-			$(".tbTile:has(.tile-dimmed)").hide();
+			$(".tbTile:has(.tile-dimmed)").slideUp();
 		} else {
-			$(".tbTile:has(.tile-dimmed)").show();
+			$(".tbTile:has(.tile-dimmed)").slideDown();
 		}
 	});
 
