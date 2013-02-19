@@ -29,7 +29,7 @@ TFS.module("Bigsan.TFSExtensions.EnhancedTaskBoard", [
     }
     function addExtraInfoToWorkItem(id, data) {
         var msecsAgo = (new Date()).getTime() - data.changedDate.getTime();
-        var daysAgo = Math.ceil(msecsAgo / 86400000);
+        var daysAgo = Math.round(msecsAgo / 86400000);
         var daysAgoDiv = $("<div class='daysAgo'>" + daysAgo + "d</div>").attr("title", data.changedDate.toString());
         if(daysAgo < 2) {
             daysAgoDiv.addClass("recent");
@@ -110,13 +110,6 @@ TFS.module("Bigsan.TFSExtensions.EnhancedTaskBoard", [
         return $(".tbTile, .taskboard-parent[id]").map(function (idx, item) {
             return item.id.match(/\d+$/)[0];
         }).get();
-    }
-    function getWitQueryUrl(ids) {
-        var collectionUrl = location.pathname.match(/\/tfs\/[^\/]+/i)[0];
-        var idsQuery = $.map(ids, function (item, idx) {
-            return "ids=" + item;
-        }).join("&");
-        return collectionUrl + "/_api/_wit/workitems?__v=1&" + idsQuery;
     }
     function queryWorkItems(ids, callback) {
         wiManager.beginGetWorkItems(ids, function (items) {

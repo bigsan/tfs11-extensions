@@ -33,7 +33,7 @@ TFS.module("Bigsan.TFSExtensions.EnhancedTaskBoard", ["TFS.Host"], function () {
 
 	function addExtraInfoToWorkItem(id: string, data: { changedDate; state; }) {
 		var msecsAgo = (new Date()).getTime() - data.changedDate.getTime();
-		var daysAgo = Math.ceil(msecsAgo / 86400000);
+		var daysAgo = Math.round(msecsAgo / 86400000);
 
 		var daysAgoDiv = $("<div class='daysAgo'>" + daysAgo + "d</div>")
 			.attr("title", data.changedDate.toString());
@@ -116,12 +116,6 @@ TFS.module("Bigsan.TFSExtensions.EnhancedTaskBoard", ["TFS.Host"], function () {
 
 	function getAllIds(): string[] {
 		return $(".tbTile, .taskboard-parent[id]").map((idx, item) => { return item.id.match(/\d+$/)[0]; }).get();
-	}
-
-	function getWitQueryUrl(ids: string[]): string {
-		var collectionUrl = location.pathname.match(/\/tfs\/[^\/]+/i)[0]; // ex: "/tfs/DefaultCollection"
-		var idsQuery = $.map(ids, (item, idx) => { return "ids=" + item; }).join("&");
-		return collectionUrl + "/_api/_wit/workitems?__v=1&" + idsQuery;
 	}
 
 	function queryWorkItems(ids: string[], callback: (wit_array: any[]) => {}): void {
