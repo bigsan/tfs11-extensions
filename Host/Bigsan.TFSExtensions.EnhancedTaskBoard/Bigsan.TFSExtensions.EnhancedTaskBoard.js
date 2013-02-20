@@ -9,9 +9,11 @@ TFS.module("Bigsan.TFSExtensions.EnhancedTaskBoard", [
             '.daysAgo { float: left; padding: 0 4px; color: white; background: darkgreen; }', 
             '.daysAgo.recent { background: darkred; }', 
             '.wiid { margin-right: 4px; }', 
+            '.daysAgo + .witTitle > .wiid { margin-left: 4px; }', 
             '.taskboard-row-summary .tbPivotItem .ellipsis { float: left; }', 
             '.taskboard-row-summary .tbPivotItem .pivot-state { margin-left: 4px; }', 
             '.tbPivotItem .pivot-state { font-size: 120%; font-weight: bold; }', 
+            '.tile-dimmed { opacity: 0.2; }', 
             '</style>'
         ].join("");
         $("head").append(styleHtml);
@@ -138,15 +140,6 @@ TFS.module("Bigsan.TFSExtensions.EnhancedTaskBoard", [
     TFS.Host.UI.PivotFilter.ensureEnhancements(maxWksFilter);
     maxWksFilter.bind("changed", function (n, t) {
         toggleMaximizeWorkspace(t.value == "on");
-    });
-    var hideDimmedFilter = addSelectFilter("hide dimmed tiles");
-    TFS.Host.UI.PivotFilter.ensureEnhancements(hideDimmedFilter);
-    hideDimmedFilter.bind("changed", function (n, t) {
-        if(t.value == "on") {
-            $(".tbTile:has(.tile-dimmed)").slideUp();
-        } else {
-            $(".tbTile:has(.tile-dimmed)").slideDown();
-        }
     });
     wiManager.attachWorkItemChanged(function (sender, ea) {
         if(ea.change == "reset" || ea.change == "save-completed") {
