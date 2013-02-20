@@ -1,0 +1,25 @@
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+	<Import Project="ZipArchiveTask.targets" />
+	<PropertyGroup>
+		<PackageName>Bigsan.TFSExtensions.EnhancedTaskBoard</PackageName>
+		<TargetZipFile>$(PackageName).zip</TargetZipFile>
+	</PropertyGroup>
+	<ItemGroup>
+		<FilesToZip Include="$(ProjectDir)$(PackageName)\manifest.xml" />
+		<FilesToZip Include="$(ProjectDir)$(PackageName)\amplify-1.1.0.min.js" />
+		<FilesToZip Include="$(ProjectDir)$(PackageName)\Bigsan.TFSExtensions.EnhancedTaskBoard.min.js" />
+		<FilesToZip Include="$(ProjectDir)$(PackageName)\Bigsan.TFSExtensions.EnhancedTaskBoard.js">
+			<ZipEntryFileName>Bigsan.TFSExtensions.EnhancedTaskBoard.debug.js</ZipEntryFileName>
+		</FilesToZip>
+	</ItemGroup>
+
+	<Target Name="BuildEnhancedTaskBoardPackage" AfterTargets="Build">
+		<Message Text="Building Bigsan.TFSExtensions.EnhancedTaskBoard..." Importance="high" />
+
+		<MakeDir Directories="$(ProjectDir)Output" />
+		<Zip
+			InputFileNames="@(FilesToZip)"
+			OutputFileName="$(ProjectDir)Output\$(TargetZipFile)"
+			OverwriteExistingFile="true" />
+	</Target>
+</Project>
