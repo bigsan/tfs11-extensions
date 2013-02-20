@@ -12,7 +12,7 @@ TFS.module("Bigsan.TFSExtensions.EnhancedTaskBoard", [
             '.daysAgo + .witTitle > .wiid { margin-left: 4px; }', 
             '.taskboard-row-summary .tbPivotItem .ellipsis { float: left; }', 
             '.taskboard-row-summary .tbPivotItem .pivot-state { margin-left: 4px; }', 
-            '.tbPivotItem .pivot-state { font-size: 120%; font-weight: bold; }', 
+            '.tbPivotItem .pivot-state { font-size: 120%; font-weight: bold; line-height: 25px; }', 
             '.tile-dimmed { opacity: 0.2; }', 
             '</style>'
         ].join("");
@@ -20,9 +20,14 @@ TFS.module("Bigsan.TFSExtensions.EnhancedTaskBoard", [
     }
     function addIdToWorkItem(id) {
         var tile = $("#tile-" + id);
-        var pbi = $("#taskboard-table_p" + id);
-        var pbi_summary = pbi.closest(".taskboard-row").next();
-        tile.add(pbi).add(pbi_summary).each(function (idx, el) {
+        var targets = tile;
+        var state = TFS.Host.history.getCurrentState().action;
+        if(state == "stories") {
+            var pbi = $("#taskboard-table_p" + id);
+            var pbi_summary = pbi.closest(".taskboard-row").next();
+            targets = targets.add(pbi).add(pbi_summary);
+        }
+        targets.each(function (idx, el) {
             if($(el).find(".wiid").length == 0) {
                 $(el).find(".witTitle").prepend("<strong class='wiid' />");
             }
@@ -30,17 +35,20 @@ TFS.module("Bigsan.TFSExtensions.EnhancedTaskBoard", [
         });
     }
     function addExtraInfoToWorkItem(id, data) {
+        var state = TFS.Host.history.getCurrentState().action;
         var msecsAgo = (new Date()).getTime() - data.changedDate.getTime();
         var daysAgo = Math.round(msecsAgo / 86400000);
-        var daysAgoDiv = $("<div class='daysAgo'>" + daysAgo + "d</div>").attr("title", data.changedDate.toString());
+        var daysAgoDiv = $("<div class='daysAgo'>" + daysAgo + "d</div>").attr("title", "Last Changed: " + data.changedDate.toLocaleString());
         if(daysAgo < 2) {
             daysAgoDiv.addClass("recent");
         }
         $("#tile-" + id).find(".daysAgo").remove().end().find(".witExtra").prepend(daysAgoDiv);
-        var row = $("#taskboard-table_p" + id);
-        var summaryRow = row.closest(".taskboard-row").next();
-        var pivotItemRows = row.add(summaryRow);
-        pivotItemRows.find(".daysAgo").remove().end().find(".witTitle").before(daysAgoDiv).end().find(".pivot-state").remove().end().find(".tbPivotItem").append("<span class='pivot-state'>" + data.state + "</span>");
+        if(state == "stories") {
+            var row = $("#taskboard-table_p" + id);
+            var summaryRow = row.closest(".taskboard-row").next();
+            var pivotItemRows = row.add(summaryRow);
+            pivotItemRows.find(".daysAgo").remove().end().find(".witTitle").before(daysAgoDiv).end().find(".pivot-state").remove().end().find(".tbPivotItem").append("<span class='pivot-state'>" + data.state + "</span>");
+        }
     }
     function addToolbarButtons() {
         $(".hub-pivot-content").css("top", "+=40px");
@@ -119,6 +127,7 @@ TFS.module("Bigsan.TFSExtensions.EnhancedTaskBoard", [
         });
     }
     function initQuery() {
+        console.log("initQuery");
         var ids = getAllIds();
         queryWorkItems(ids, function (workitems) {
             $.each(workitems, function (idx, wi) {
@@ -133,13 +142,13 @@ TFS.module("Bigsan.TFSExtensions.EnhancedTaskBoard", [
             });
         });
     }
-    initQuery();
     addCssRules();
     addToolbarButtons();
     var maxWksFilter = addSelectFilter("maximize workspace");
     TFS.Host.UI.PivotFilter.ensureEnhancements(maxWksFilter);
     maxWksFilter.bind("changed", function (n, t) {
-        toggleMaximizeWorkspace(t.value == "on");
+        var val = t.value == "on";
+        toggleMaximizeWorkspace(val);
     });
     wiManager.attachWorkItemChanged(function (sender, ea) {
         if(ea.change == "reset" || ea.change == "save-completed") {
@@ -157,6 +166,10 @@ TFS.module("Bigsan.TFSExtensions.EnhancedTaskBoard", [
         }
     });
     TFS.Host.history.attachNavigate("stories", function () {
-        initQuery();
+        console.log("onNaviage: stories");
     }, true);
+    TFS.Host.history.attachNavigate("team", function () {
+        console.log("onNavigate: team");
+    }, true);
+    initQuery();
 });
