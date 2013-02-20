@@ -1,32 +1,62 @@
 interface TFSInterface {
 	getModuleBase(moduleName: string);
-	module(moduleName, deps, callback);
+	module(moduleName: string, deps: string[], callback: Function);
 
-	Host;
-	OM: { TfsTeamProjectCollection; };
-	Resources;
-	UI;
-	WorkItemTracking: { WorkItemStore; };
+	Host: {
+		UI: {
+			PivotFilter: {
+				ensureEnhancements: Function;
+			};
+		};
+		history: {
+			getCurrentState(): {
+				action: string;
+			};
+			attachNavigate(action: string, handler: Function, checkCurrentState: bool);
+		};
+	};
+	OM: {
+		TfsTeamProjectCollection: {
+			getDefault(): {
+				getService(serviceType): {
+					workItemManager: {
+						attachWorkItemChanged(callback: (sender, ea: WorkItemChangedEventArgsInterface) => {});
+						beginGetWorkItems(ids: string[], callback: (workItems: any[]) => {});
+					};
+				};
+			};
+		};
+	};
+	Resources: { Common; };
+	UI: {
+		Controls: {
+			Menus: {
+				MenuBar: {
+					createIn: Function;
+				};
+			};
+		};
+	};
+	WorkItemTracking: {
+		WorkItemStore: {
+			WorkItemStore;
+		};
+	};
 }
 
 interface WorkItemChangedEventArgsInterface {
 	change: string; // reset | save-completed | ...
-	workItem: WorkItemInterface;
+	workItem: {
+		id: string;
+		fieldMap;
+		workItemType: { name; };
+		getFieldValue(fieldName: string): any;
+	};
 }
 
-interface WorkItemManagerInterface {
-	attachWorkItemChanged(callback: (sender, ea: WorkItemChangedEventArgsInterface) => {});
-	beginGetWorkItems(ids: string[], callback: (workItems: any[]) => {});
-}
-
-interface WorkItemInterface {
-	id: string;
-	fieldMap;
-	workItemType: { name; };
-	getFieldValue(fieldName: string): any;
-}
 
 var TFS: TFSInterface;
+
 
 /* Work Item Field Mapping
 
