@@ -8,6 +8,7 @@ TFS.module("Bigsan.TFSExtensions.EnhancedTaskBoard", [
             '<style id="etb" type="text/css">', 
             '.daysAgo { float: left; padding: 0 4px; color: white; background: darkgreen; }', 
             '.daysAgo.recent { background: darkred; }', 
+            '.taskboard-parent-wrapper .daysAgo { padding: 2px 4px 3px; }', 
             '.wiid { margin-right: 4px; }', 
             '.daysAgo + .witTitle > .wiid { margin-left: 4px; }', 
             '.taskboard-row-summary .tbPivotItem .ellipsis { float: left; }', 
@@ -166,6 +167,7 @@ TFS.module("Bigsan.TFSExtensions.EnhancedTaskBoard", [
         }
     });
     TFS.Host.history.attachNavigate("stories", function () {
+        initQuery();
         console.log("onNaviage: stories");
     }, true);
     TFS.Host.history.attachNavigate("team", function () {

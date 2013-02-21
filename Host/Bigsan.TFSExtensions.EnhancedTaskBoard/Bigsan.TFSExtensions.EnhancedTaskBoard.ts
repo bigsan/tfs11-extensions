@@ -11,6 +11,7 @@ TFS.module("Bigsan.TFSExtensions.EnhancedTaskBoard", ["TFS.Host"], function () {
 		var styleHtml = ['<style id="etb" type="text/css">',
 						'.daysAgo { float: left; padding: 0 4px; color: white; background: darkgreen; }',
 						'.daysAgo.recent { background: darkred; }',
+						'.taskboard-parent-wrapper .daysAgo { padding: 2px 4px 3px; }',
 
 						'.wiid { margin-right: 4px; }',
 						'.daysAgo + .witTitle > .wiid { margin-left: 4px; }',
@@ -181,6 +182,7 @@ TFS.module("Bigsan.TFSExtensions.EnhancedTaskBoard", ["TFS.Host"], function () {
 	});
 
 	TFS.Host.history.attachNavigate("stories", function () {
+		initQuery(); // load pbi id & extra info if it was not loaded yet.
 		console.log("onNaviage: stories");
 	}, true);
 

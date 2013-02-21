@@ -1,5 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+	<!-- http://blog.3d-logic.com/2012/10/16/msbuild-zip-task-without-external-dependencies/ -->
 	<UsingTask TaskName="Zip" TaskFactory="CodeTaskFactory" AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.v4.0.dll">
 		<ParameterGroup>
 			<InputFileNames ParameterType="Microsoft.Build.Framework.ITaskItem[]" Required="true" />
