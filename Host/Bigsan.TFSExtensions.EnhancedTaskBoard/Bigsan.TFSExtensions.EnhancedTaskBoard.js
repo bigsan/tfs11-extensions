@@ -3,17 +3,22 @@ TFS.module("Bigsan.TFSExtensions.EnhancedTaskBoard", [
 ], function () {
     var wiManager = TFS.OM.TfsTeamProjectCollection.getDefault().getService(TFS.WorkItemTracking.WorkItemStore).workItemManager;
     var res = TFS.Resources.Common;
+    function log(msg) {
+        console.log(msg);
+    }
     function addCssRules() {
         var styleHtml = [
             '<style id="etb" type="text/css">', 
-            '.daysAgo { float: left; padding: 0 4px; color: white; background: darkgreen; }', 
+            '.daysAgo { float: left; padding: 0 4px; color: white; background: darkgreen; line-height: 18px; }', 
             '.daysAgo.recent { background: darkred; }', 
-            '.taskboard-parent-wrapper .daysAgo { padding: 2px 4px 3px; }', 
-            '.wiid { margin-right: 4px; }', 
+            '.tbPivotItem .daysAgo { margin-right: 4px; }', 
+            '.tbPivotItem .witRemainingWork { float: left; margin-right: 4px; }', 
+            '.tbPivotItem .pivot-state { line-height: 18px; font-weight: bold; border: dotted 1px gray; background: #ddd; padding: 0 2px; }', 
+            '.tbPivotItem .ellipsis { float: left; }', 
+            '.tbPivotItem .ellipsis + .daysAgo { margin: 1px 4px 0 4px; }', 
+            '.pivot-state.non-committed { background: red; color: white; }', 
+            '.wiid { margin-right: 4px; font-size: 80%; text-decoration: underline; }', 
             '.daysAgo + .witTitle > .wiid { margin-left: 4px; }', 
-            '.taskboard-row-summary .tbPivotItem .ellipsis { float: left; }', 
-            '.taskboard-row-summary .tbPivotItem .pivot-state { margin-left: 4px; }', 
-            '.tbPivotItem .pivot-state { font-size: 120%; font-weight: bold; line-height: 25px; }', 
             '.tile-dimmed { opacity: 0.2; }', 
             '</style>'
         ].join("");
@@ -38,17 +43,25 @@ TFS.module("Bigsan.TFSExtensions.EnhancedTaskBoard", [
     function addExtraInfoToWorkItem(id, data) {
         var state = TFS.Host.history.getCurrentState().action;
         var msecsAgo = (new Date()).getTime() - data.changedDate.getTime();
-        var daysAgo = Math.round(msecsAgo / 86400000);
-        var daysAgoDiv = $("<div class='daysAgo'>" + daysAgo + "d</div>").attr("title", "Last Changed: " + data.changedDate.toLocaleString());
-        if(daysAgo < 2) {
-            daysAgoDiv.addClass("recent");
+        var daysAgo = (msecsAgo / 86400000).toFixed(1);
+        var daysAgoElement = $("<div class='daysAgo'>" + daysAgo + "d</div>").attr("title", "Last Changed: " + data.changedDate.toLocaleString());
+        if(daysAgo < "2") {
+            daysAgoElement.addClass("recent");
         }
-        $("#tile-" + id).find(".daysAgo").remove().end().find(".witExtra").prepend(daysAgoDiv);
-        if(state == "stories") {
-            var row = $("#taskboard-table_p" + id);
-            var summaryRow = row.closest(".taskboard-row").next();
-            var pivotItemRows = row.add(summaryRow);
-            pivotItemRows.find(".daysAgo").remove().end().find(".witTitle").before(daysAgoDiv).end().find(".pivot-state").remove().end().find(".tbPivotItem").append("<span class='pivot-state'>" + data.state + "</span>");
+        var tile = $("#tile-" + id);
+        tile.find(".daysAgo").remove();
+        tile.find(".witExtra").prepend(daysAgoElement.clone());
+        var pbiCell = $("#taskboard-table_p" + id);
+        if(pbiCell.length > 0 && state == "stories") {
+            var summaryRow = pbiCell.closest(".taskboard-row").next();
+            pbiCell.find(".daysAgo, .pivot-state").remove();
+            summaryRow.find(".daysAgo, .pivot-state").remove();
+            var stateElement = $("<span class='pivot-state'>" + data.state + "</span>");
+            if(data.state != "Committed") {
+                stateElement.addClass("non-committed");
+            }
+            pbiCell.find(".tbPivotItem .witRemainingWork").before(daysAgoElement.clone()).after(stateElement.clone());
+            summaryRow.find(".tbPivotItem").append(daysAgoElement.clone()).append(stateElement.clone());
         }
     }
     function addToolbarButtons() {
@@ -128,19 +141,22 @@ TFS.module("Bigsan.TFSExtensions.EnhancedTaskBoard", [
         });
     }
     function initQuery() {
-        console.log("initQuery");
+        log("initQuery");
         var ids = getAllIds();
+        $.each(ids, function (idx, item) {
+            return addIdToWorkItem(item);
+        });
         queryWorkItems(ids, function (workitems) {
             $.each(workitems, function (idx, wi) {
                 var id = wi.getFieldValue("System.Id");
                 var state = wi.getFieldValue("System.State");
                 var changedDate = wi.getFieldValue("System.ChangedDate").value;
-                addIdToWorkItem(id);
                 addExtraInfoToWorkItem(id, {
                     changedDate: changedDate,
                     state: state
                 });
             });
+            log("queryWorkItems done");
         });
     }
     addCssRules();
@@ -168,10 +184,10 @@ TFS.module("Bigsan.TFSExtensions.EnhancedTaskBoard", [
     });
     TFS.Host.history.attachNavigate("stories", function () {
         initQuery();
-        console.log("onNaviage: stories");
+        log("onNaviage: stories");
     }, true);
     TFS.Host.history.attachNavigate("team", function () {
-        console.log("onNavigate: team");
+        log("onNavigate: team");
     }, true);
     initQuery();
 });
