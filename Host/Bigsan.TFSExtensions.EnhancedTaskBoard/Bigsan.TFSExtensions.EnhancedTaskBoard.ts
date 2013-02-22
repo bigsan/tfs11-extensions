@@ -40,8 +40,8 @@ TFS.module("Bigsan.TFSExtensions.EnhancedTaskBoard", ["TFS.Host"], function () {
 		var tile = $("#tile-" + id);
 
 		var targets = tile;
-		var state = TFS.Host.history.getCurrentState().action;
-		if (state == "stories") {
+		var action = TFS.Host.history.getCurrentState().action || "stories";
+		if (action == "stories") {
 			var pbi = $("#taskboard-table_p" + id);
 			var pbi_summary = pbi.closest(".taskboard-row").next();
 			targets = targets.add(pbi).add(pbi_summary);
@@ -55,7 +55,7 @@ TFS.module("Bigsan.TFSExtensions.EnhancedTaskBoard", ["TFS.Host"], function () {
 	}
 
 	function addExtraInfoToWorkItem(id: string, data: { changedDate; state; }) {
-		var state = TFS.Host.history.getCurrentState().action;
+		var action = TFS.Host.history.getCurrentState().action || "stories";
 
 		var msecsAgo = (new Date()).getTime() - data.changedDate.getTime();
 		var daysAgo = (msecsAgo / 86400000).toFixed(1);
@@ -70,7 +70,7 @@ TFS.module("Bigsan.TFSExtensions.EnhancedTaskBoard", ["TFS.Host"], function () {
 		tile.find(".witExtra").prepend(daysAgoElement.clone());
 
 		var pbiCell = $("#taskboard-table_p" + id);
-		if (pbiCell.length > 0 && state == "stories") {
+		if (pbiCell.length > 0 && action == "stories") {
 			var summaryRow = pbiCell.closest(".taskboard-row").next();
 
 			pbiCell.find(".daysAgo, .pivot-state").remove();
