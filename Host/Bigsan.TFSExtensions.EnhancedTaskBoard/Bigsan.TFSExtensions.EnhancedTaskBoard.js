@@ -146,6 +146,7 @@ TFS.module("Bigsan.TFSExtensions.EnhancedTaskBoard", [
         $.each(ids, function (idx, item) {
             return addIdToWorkItem(item);
         });
+        var actionId = TFS.globalProgressIndicator.actionStarted("queryWorkItem");
         queryWorkItems(ids, function (workitems) {
             $.each(workitems, function (idx, wi) {
                 var id = wi.getFieldValue("System.Id");
@@ -156,6 +157,7 @@ TFS.module("Bigsan.TFSExtensions.EnhancedTaskBoard", [
                     state: state
                 });
             });
+            TFS.globalProgressIndicator.actionCompleted(actionId);
             log("queryWorkItems done");
         });
     }

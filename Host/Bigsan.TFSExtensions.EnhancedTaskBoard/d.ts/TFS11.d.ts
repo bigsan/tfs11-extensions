@@ -2,6 +2,14 @@ interface TFSInterface {
 	getModuleBase(moduleName: string);
 	module(moduleName: string, deps: string[], callback: Function);
 
+	globalProgressIndicator: {
+		actionStarted(name, immediate?: bool);
+		actionCompleted(id);
+		getPendingActions();
+		getProgressElements();
+		registerProgressElement(element);
+		unRegisterProgressElement(element);
+	};
 	Host: {
 		UI: {
 			PivotFilter: {
