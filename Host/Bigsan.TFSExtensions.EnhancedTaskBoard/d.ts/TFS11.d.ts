@@ -11,16 +11,36 @@ interface TFSInterface {
 		unRegisterProgressElement(element);
 	};
 	Host: {
-		UI: {
-			PivotFilter: {
-				ensureEnhancements: Function;
-			};
-		};
 		history: {
 			getCurrentState(): {
 				action: string;
 			};
 			attachNavigate(action: string, handler: Function, checkCurrentState: bool);
+		};
+		TfsContext: {
+			getDefault(): {
+				confituration;
+				currentIdentity;
+				currentTeam;
+				currentUser;
+				navigation: {
+					currentController;
+					currentAction;
+					levels;
+					project;
+					team;
+					area;
+				};
+				getActionUrl(action, controller, routeData);
+				getClientHost();
+				getIdentityImageUrl(identityId, urlParams);
+				getPublicActionUrl(action, controller, routeData);
+			};
+		};
+		UI: {
+			PivotFilter: {
+				ensureEnhancements: Function;
+			};
 		};
 	};
 	OM: {
