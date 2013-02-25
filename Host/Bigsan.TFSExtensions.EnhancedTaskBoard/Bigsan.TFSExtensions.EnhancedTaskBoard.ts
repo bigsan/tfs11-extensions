@@ -5,6 +5,9 @@ declare var __uiCulture: string;
 TFS.module("Bigsan.TFSExtensions.EnhancedTaskBoard", ["TFS.Host"], function () {
 	var wiManager = TFS.OM.TfsTeamProjectCollection.getDefault().getService(TFS.WorkItemTracking.WorkItemStore).workItemManager;
 	var res = TFS.Resources.Common;
+	var currentController = TFS.Host.TfsContext.getDefault().navigation.currentController;
+	var isBoards = currentController == "boards";
+	var isBacklogs = currentController == "backlogs";
 
 	function log(msg) {
 		console.log(msg);
@@ -141,6 +144,7 @@ TFS.module("Bigsan.TFSExtensions.EnhancedTaskBoard", ["TFS.Host"], function () {
 			$(".header-section").animate({ "margin-top": 0 });
 			$(".content-section").animate({ "top": "91px" });
 		}
+		if (isBacklogs) $(".productbacklog-grid-results").resize();
 	}
 
 	function getAllIds(): string[] {
@@ -180,7 +184,6 @@ TFS.module("Bigsan.TFSExtensions.EnhancedTaskBoard", ["TFS.Host"], function () {
 		toggleMaximizeWorkspace(val);
 	});
 
-	var isBoards = TFS.Host.TfsContext.getDefault().navigation.currentController == "boards";
 	if (isBoards) {
 		addCssRules();
 		addToolbarButtons();

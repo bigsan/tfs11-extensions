@@ -3,6 +3,9 @@ TFS.module("Bigsan.TFSExtensions.EnhancedTaskBoard", [
 ], function () {
     var wiManager = TFS.OM.TfsTeamProjectCollection.getDefault().getService(TFS.WorkItemTracking.WorkItemStore).workItemManager;
     var res = TFS.Resources.Common;
+    var currentController = TFS.Host.TfsContext.getDefault().navigation.currentController;
+    var isBoards = currentController == "boards";
+    var isBacklogs = currentController == "backlogs";
     function log(msg) {
         console.log(msg);
     }
@@ -129,6 +132,9 @@ TFS.module("Bigsan.TFSExtensions.EnhancedTaskBoard", [
                 "top": "91px"
             });
         }
+        if(isBacklogs) {
+            $(".productbacklog-grid-results").resize();
+        }
     }
     function getAllIds() {
         return $(".tbTile, .taskboard-parent[id]").map(function (idx, item) {
@@ -167,7 +173,6 @@ TFS.module("Bigsan.TFSExtensions.EnhancedTaskBoard", [
         var val = t.value == "on";
         toggleMaximizeWorkspace(val);
     });
-    var isBoards = TFS.Host.TfsContext.getDefault().navigation.currentController == "boards";
     if(isBoards) {
         addCssRules();
         addToolbarButtons();
