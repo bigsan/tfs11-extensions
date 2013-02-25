@@ -3,11 +3,12 @@ declare var $;
 declare var __uiCulture: string;
 
 TFS.module("Bigsan.TFSExtensions.EnhancedTaskBoard", ["TFS.Host"], function () {
-	var wiManager = TFS.OM.TfsTeamProjectCollection.getDefault().getService(TFS.WorkItemTracking.WorkItemStore).workItemManager;
-	var res = TFS.Resources.Common;
-	var currentController = TFS.Host.TfsContext.getDefault().navigation.currentController;
-	var isBoards = currentController == "boards";
-	var isBacklogs = currentController == "backlogs";
+	var _wiManager = TFS.OM.TfsTeamProjectCollection.getDefault().getService(TFS.WorkItemTracking.WorkItemStore).workItemManager;
+	var _res = TFS.Resources.Common;
+	var _currentController = TFS.Host.TfsContext.getDefault().navigation.currentController;
+	var _isBoards = _currentController == "boards";
+	var _isBacklogs = _currentController == "backlogs";
+	var _isWorkItems = _currentController == "workitems";
 
 	function log(msg) {
 		console.log(msg);
@@ -91,14 +92,14 @@ TFS.module("Bigsan.TFSExtensions.EnhancedTaskBoard", ["TFS.Host"], function () {
 		TFS.UI.Controls.Menus.MenuBar.createIn($(".hub-pivot-toolbar"), {
 			items: [{
 				id: "expandAll",
-				text: res.ExpandAll,
-				title: res.ExpandAllToolTip,
+				text: _res.ExpandAll,
+				title: _res.ExpandAllToolTip,
 				showText: false,
 				icon: "icon-tree-expand-all"
 			}, {
 				id: "collapseAll",
-				text: res.CollapseAll,
-				title: res.CollapseAllToolTip,
+				text: _res.CollapseAll,
+				title: _res.CollapseAllToolTip,
 				showText: false,
 				icon: "icon-tree-collapse-all"
 			}],
@@ -117,6 +118,36 @@ TFS.module("Bigsan.TFSExtensions.EnhancedTaskBoard", ["TFS.Host"], function () {
 						break;
 				}
 			}
+		});
+	}
+
+	function getAllIds(): string[] {
+		return $(".tbTile, .taskboard-parent[id]").map((idx, item) => { return item.id.match(/\d+$/)[0]; }).get();
+	}
+
+	function queryWorkItems(ids: string[], callback: (wit_array: any[]) => {}): void {
+		_wiManager.beginGetWorkItems(ids, (items) => {
+			callback(items);
+		});
+	}
+
+	function initQuery() {
+		log("queryWorkItems start.");
+
+		var ids = getAllIds();
+		$.each(ids, (idx, item) => addIdToWorkItem(item));
+
+		var actionId = TFS.globalProgressIndicator.actionStarted("queryWorkItem");
+		queryWorkItems(ids, (workitems) => {
+			$.each(workitems, function (idx, wi) {
+				var id = wi.getFieldValue("System.Id");
+				var state = wi.getFieldValue("System.State");
+				var changedDate = wi.getFieldValue("System.ChangedDate").value;
+
+				addExtraInfoToWorkItem(id, { changedDate: changedDate, state: state });
+			});
+			TFS.globalProgressIndicator.actionCompleted(actionId);
+			log("queryWorkItems end.");
 		});
 	}
 
@@ -144,37 +175,7 @@ TFS.module("Bigsan.TFSExtensions.EnhancedTaskBoard", ["TFS.Host"], function () {
 			$(".header-section").animate({ "margin-top": 0 });
 			$(".content-section").animate({ "top": "91px" });
 		}
-		if (isBacklogs) $(".productbacklog-grid-results").resize();
-	}
-
-	function getAllIds(): string[] {
-		return $(".tbTile, .taskboard-parent[id]").map((idx, item) => { return item.id.match(/\d+$/)[0]; }).get();
-	}
-
-	function queryWorkItems(ids: string[], callback: (wit_array: any[]) => {}): void {
-		wiManager.beginGetWorkItems(ids, (items) => {
-			callback(items);
-		});
-	}
-
-	function initQuery() {
-		log("queryWorkItems start.");
-
-		var ids = getAllIds();
-		$.each(ids, (idx, item) => addIdToWorkItem(item));
-
-		var actionId = TFS.globalProgressIndicator.actionStarted("queryWorkItem");
-		queryWorkItems(ids, (workitems) => {
-			$.each(workitems, function (idx, wi) {
-				var id = wi.getFieldValue("System.Id");
-				var state = wi.getFieldValue("System.State");
-				var changedDate = wi.getFieldValue("System.ChangedDate").value;
-
-				addExtraInfoToWorkItem(id, { changedDate: changedDate, state: state });
-			});
-			TFS.globalProgressIndicator.actionCompleted(actionId);
-			log("queryWorkItems end.");
-		});
+		if (_isBacklogs) $(".productbacklog-grid-results").resize();
 	}
 
 	var maxWksFilter = addSelectFilter("maximize workspace");
@@ -184,12 +185,12 @@ TFS.module("Bigsan.TFSExtensions.EnhancedTaskBoard", ["TFS.Host"], function () {
 		toggleMaximizeWorkspace(val);
 	});
 
-	if (isBoards) {
+	if (_isBoards) {
 		addCssRules();
 		addToolbarButtons();
 
 		// attach work item changed event
-		wiManager.attachWorkItemChanged((sender, ea) => {
+		_wiManager.attachWorkItemChanged((sender, ea) => {
 			if (ea.change == "reset" || ea.change == "save-completed") {
 				var wi = ea.workItem;
 				var id = wi.getFieldValue("System.Id");
