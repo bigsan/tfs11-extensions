@@ -1,6 +1,7 @@
 /// <reference path="d.ts/TFS11.d.ts" />
 declare var $;
 declare var __uiCulture: string;
+declare var amplify;
 
 TFS.module("Bigsan.TFSExtensions.EnhancedTaskBoard", ["TFS.Host"], function () {
 	var _wiManager = TFS.OM.TfsTeamProjectCollection.getDefault().getService(TFS.WorkItemTracking.WorkItemStore).workItemManager;
@@ -37,6 +38,11 @@ TFS.module("Bigsan.TFSExtensions.EnhancedTaskBoard", ["TFS.Host"], function () {
 						'.tile-dimmed { opacity: 0.2; }',
 						'</style>'].join("");
 		$("head").append(styleHtml);
+	}
+
+	function injectAmplifyJS() {
+		var jssrc = TFS.getModuleBase("Bigsan.TFSExtensions.EnhancedTaskBoard") + "amplify-1.1.0.min.js";
+		$("head").append($("<script>").attr({ "type": "text/javascript", "src": jssrc }));
 	}
 
 	function addIdToWorkItem(id: string) {
@@ -151,39 +157,53 @@ TFS.module("Bigsan.TFSExtensions.EnhancedTaskBoard", ["TFS.Host"], function () {
 		});
 	}
 
-	function addSelectFilter(title) {
+	function addToggleFilter(title, defaultValue?) {
 		var template = [
 			'<div class="select pivot-filter enhance" title="{title}">',
 			'<span class="title">{title}</span>',
 			'<ul class="pivot-filter-items">',
 			'<li class="pivot-filter-item" data-value="on" title="ON"><a href="#">ON</a></li>',
-			'<li class="pivot-filter-item selected" data-value="off" title="OFF"><a href="#">OFF</a></li>',
+			'<li class="pivot-filter-item" data-value="off" title="OFF"><a href="#">OFF</a></li>',
 			'</ul>',
 			'</div>'].join("");
 
+		if (defaultValue != "on") defaultValue = "off";
 		return $(template)
 			.attr("title", title)
 			.find(".title").text(title).end()
+			.find("li[data-value=" + defaultValue + "]").addClass("selected").end()
 			.prependTo($(".filters:first"));
 	}
 
 	function toggleMaximizeWorkspace(max) {
+		var header = $(".header-section");
+		var content = $(".content-section");
 		if (max) {
-			$(".header-section").animate({ "margin-top": "-91px" });
-			$(".content-section").animate({ "top": 0 });
+			header.animate({ "margin-top": "-91px" });
+			content.animate({ "top": 0 });
 		} else {
-			$(".header-section").animate({ "margin-top": 0 });
-			$(".content-section").animate({ "top": "91px" });
+			header.animate({ "margin-top": 0 });
+			content.animate({ "top": "91px" });
 		}
-		if (_isBacklogs) $(".productbacklog-grid-results").resize();
+		if (_isBacklogs) {
+			$.queue($(".content-section")[0], "fx", function () {
+				$(".productbacklog-grid-results").resize();
+				$.dequeue(this);
+			});
+		}
 	}
 
-	var maxWksFilter = addSelectFilter("maximize workspace");
+	injectAmplifyJS();
+
+	var maxWorkspace = amplify.store("maxWorkspace");
+	var maxWksFilter = addToggleFilter("maximize workspace", maxWorkspace ? "on" : "off");
 	TFS.Host.UI.PivotFilter.ensureEnhancements(maxWksFilter);
 	maxWksFilter.bind("changed", function (n, t) {
 		var val = t.value == "on";
 		toggleMaximizeWorkspace(val);
+		amplify.store("maxWorkspace", val);
 	});
+	toggleMaximizeWorkspace(maxWorkspace);
 
 	if (_isBoards) {
 		addCssRules();
