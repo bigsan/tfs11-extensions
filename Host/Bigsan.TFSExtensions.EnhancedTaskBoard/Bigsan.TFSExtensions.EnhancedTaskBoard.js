@@ -228,12 +228,6 @@ TFS.module("Bigsan.TFSExtensions.EnhancedTaskBoard", [
         initQuery();
     } else if(_currentRoute == "backlogs.board") {
         addCssRules();
-        $(".board-tile").each(function (idx, el) {
-            if($(el).find(".wiid").length == 0) {
-                $(el).find(".title").prepend("<strong class='wiid' />");
-            }
-            $(el).find(".title .wiid").text($(el).data("itemId"));
-        });
         _wiManager.attachWorkItemChanged(function (sender, ea) {
             if(ea.change == "reset" || ea.change == "save-completed") {
                 var wi = ea.workItem;
@@ -253,5 +247,13 @@ TFS.module("Bigsan.TFSExtensions.EnhancedTaskBoard", [
                 }, 100);
             }
         });
+        window.setTimeout(function () {
+            $(".board-tile").each(function (idx, el) {
+                if($(el).find(".wiid").length == 0) {
+                    $(el).find(".title").prepend("<strong class='wiid' />");
+                }
+                $(el).find(".title .wiid").text($(el).data("itemId"));
+            });
+        }, 100);
     }
 });
