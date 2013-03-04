@@ -76,11 +76,11 @@ TFS.module("Bigsan.TFSExtensions.EnhancedTaskBoard", ["TFS.Host"], function () {
 		var action = TFS.Host.history.getCurrentState().action || "stories";
 
 		var msecsAgo = (new Date()).getTime() - data.changedDate.getTime();
-		var daysAgo = (msecsAgo / 86400000).toFixed(1);
+		var daysAgo = (msecsAgo / 86400000);
 
-		var daysAgoElement = $("<div class='daysAgo'>" + daysAgo + "d</div>")
+		var daysAgoElement = $("<div class='daysAgo'>" + daysAgo.toFixed(1) + "d</div>")
 			.attr("title", "Last Changed: " + data.changedDate.toLocaleString());
-		if (daysAgo < "2") daysAgoElement.addClass("recent");
+		if (daysAgo < 2) daysAgoElement.addClass("recent");
 
 
 		var tile = $("#tile-" + id);

@@ -21,7 +21,10 @@ interface TFSInterface {
 			performAction(action: string);
 		};
 		CommonActions: {
+			ACTION_WINDOW_OPEN;
+			ACTION_WINDOW_NAVIGATE;
 			ACTION_WINDOW_RELOAD;
+			ACTION_WINDOW_UNLOAD;
 		};
 		TfsContext: {
 			getDefault(): {
