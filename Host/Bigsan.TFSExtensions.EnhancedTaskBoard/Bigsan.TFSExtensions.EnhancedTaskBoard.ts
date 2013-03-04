@@ -6,10 +6,17 @@ declare var amplify;
 TFS.module("Bigsan.TFSExtensions.EnhancedTaskBoard", ["TFS.Host"], function () {
 	var _wiManager = TFS.OM.TfsTeamProjectCollection.getDefault().getService(TFS.WorkItemTracking.WorkItemStore).workItemManager;
 	var _res = TFS.Resources.Common;
-	var _currentController = TFS.Host.TfsContext.getDefault().navigation.currentController;
-	var _isBoards = _currentController == "boards";
-	var _isBacklogs = _currentController == "backlogs";
-	var _isWorkItems = _currentController == "workitems";
+
+	var nav = TFS.Host.TfsContext.getDefault().navigation;
+	var _currentRoute = nav.currentController + "." + nav.currentAction;
+	log("_currentRoute: " + _currentRoute);
+
+	// Route			Module loaded last
+	// ===============	========================
+	// backlogs.index	TFS.Agile.ProductBacklog
+	// backlogs.board	TFS.Agile.Boards.Control
+	// boards.index		TFS.Agile.TaskBoard
+	// workitems.index	TFS.WorkItems
 
 	function log(msg) {
 		console.log(msg);
@@ -29,7 +36,9 @@ TFS.module("Bigsan.TFSExtensions.EnhancedTaskBoard", ["TFS.Host"], function () {
 						'.tbPivotItem .ellipsis { float: left; }',
 						'.tbPivotItem .ellipsis + .daysAgo { margin: 1px 4px 0 4px; }',
 
-						'.pivot-state.non-committed { background: red; color: white; }',
+						// pivot-state color
+						'.pivot-state.approved, .pivot-state.new { background: red; color: white; }',
+						'.pivot-state.done { background: dardgreen; color: white; }',
 
 						// work item id
 						'.wiid { margin-right: 4px; font-size: 80%; text-decoration: underline; }',
@@ -45,7 +54,7 @@ TFS.module("Bigsan.TFSExtensions.EnhancedTaskBoard", ["TFS.Host"], function () {
 		$("head").append($("<script>").attr({ "type": "text/javascript", "src": jssrc }));
 	}
 
-	function addIdToWorkItem(id: string) {
+	function addIdToWorkItemOfSprint(id: string) {
 		var tile = $("#tile-" + id);
 
 		var targets = tile;
@@ -85,8 +94,7 @@ TFS.module("Bigsan.TFSExtensions.EnhancedTaskBoard", ["TFS.Host"], function () {
 			pbiCell.find(".daysAgo, .pivot-state").remove();
 			summaryRow.find(".daysAgo, .pivot-state").remove();
 
-			var stateElement = $("<span class='pivot-state'>" + data.state + "</span>");
-			if (data.state != "Committed") stateElement.addClass("non-committed");
+			var stateElement = $("<span class='pivot-state'>" + data.state + "</span>").addClass(data.state.toLowerCase());
 			pbiCell.find(".tbPivotItem .witRemainingWork").before(daysAgoElement.clone()).after(stateElement.clone());
 			summaryRow.find(".tbPivotItem").append(daysAgoElement.clone()).append(stateElement.clone());
 		}
@@ -127,7 +135,7 @@ TFS.module("Bigsan.TFSExtensions.EnhancedTaskBoard", ["TFS.Host"], function () {
 		});
 	}
 
-	function getAllIds(): string[] {
+	function getAllIdsOfSprint(): string[] {
 		return $(".tbTile, .taskboard-parent[id]").map((idx, item) => { return item.id.match(/\d+$/)[0]; }).get();
 	}
 
@@ -140,8 +148,8 @@ TFS.module("Bigsan.TFSExtensions.EnhancedTaskBoard", ["TFS.Host"], function () {
 	function initQuery() {
 		log("queryWorkItems start.");
 
-		var ids = getAllIds();
-		$.each(ids, (idx, item) => addIdToWorkItem(item));
+		var ids = getAllIdsOfSprint();
+		$.each(ids, (idx, item) => addIdToWorkItemOfSprint(item));
 
 		var actionId = TFS.globalProgressIndicator.actionStarted("queryWorkItem");
 		queryWorkItems(ids, (workitems) => {
@@ -185,7 +193,7 @@ TFS.module("Bigsan.TFSExtensions.EnhancedTaskBoard", ["TFS.Host"], function () {
 			header.animate({ "margin-top": 0 });
 			content.animate({ "top": "91px" });
 		}
-		if (_isBacklogs) {
+		if (_currentRoute == "backlogs.index") {
 			$.queue($(".content-section")[0], "fx", function () {
 				$(".productbacklog-grid-results").resize();
 				$.dequeue(this);
@@ -193,6 +201,8 @@ TFS.module("Bigsan.TFSExtensions.EnhancedTaskBoard", ["TFS.Host"], function () {
 		}
 	}
 
+
+	// common view
 	injectAmplifyJS();
 
 	var maxWorkspace = amplify.store("maxWorkspace");
@@ -205,7 +215,9 @@ TFS.module("Bigsan.TFSExtensions.EnhancedTaskBoard", ["TFS.Host"], function () {
 	});
 	toggleMaximizeWorkspace(maxWorkspace);
 
-	if (_isBoards) {
+
+	// conditional view for specific action
+	if (_currentRoute == "boards.index") {
 		addCssRules();
 		addToolbarButtons();
 
@@ -218,9 +230,9 @@ TFS.module("Bigsan.TFSExtensions.EnhancedTaskBoard", ["TFS.Host"], function () {
 				var changedDate = wi.getFieldValue("System.ChangedDate").value;
 
 				window.setTimeout(function () {
-					addIdToWorkItem(id);
+					addIdToWorkItemOfSprint(id);
 					addExtraInfoToWorkItem(id, { changedDate: changedDate, state: state });
-				}, 500);
+				}, 100);
 			}
 		});
 
@@ -234,5 +246,31 @@ TFS.module("Bigsan.TFSExtensions.EnhancedTaskBoard", ["TFS.Host"], function () {
 		}, true);
 
 		initQuery();
+	}
+	else if (_currentRoute == "backlogs.board") {
+		addCssRules();
+
+		// add id
+		$(".board-tile").each((idx, el) => {
+			if ($(el).find(".wiid").length == 0) $(el).find(".title").prepend("<strong class='wiid' />");
+			$(el).find(".title .wiid").text($(el).data("itemId"));
+		});
+
+		_wiManager.attachWorkItemChanged((sender, ea) => {
+			if (ea.change == "reset" || ea.change == "save-completed") {
+				var wi = ea.workItem;
+				var id = wi.getFieldValue("System.Id");
+				var state = wi.getFieldValue("System.State");
+				var changedDate = wi.getFieldValue("System.ChangedDate").value;
+
+				window.setTimeout(function () {
+					var el = $(".board-tile[data-item-id=" + id + "]");
+					if ($(el).find(".wiid").length == 0) $(el).find(".title").prepend("<strong class='wiid' />");
+					$(el).find(".title .wiid").text($(el).data("itemId"));
+
+					addExtraInfoToWorkItem(id, { changedDate: changedDate, state: state });
+				}, 100);
+			}
+		});
 	}
 });
