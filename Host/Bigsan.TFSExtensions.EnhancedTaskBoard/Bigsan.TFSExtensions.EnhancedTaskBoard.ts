@@ -116,6 +116,12 @@ TFS.module("Bigsan.TFSExtensions.EnhancedTaskBoard", ["TFS.Host"], function () {
 				title: _res.CollapseAllToolTip,
 				showText: false,
 				icon: "icon-tree-collapse-all"
+			}, {
+				id: "refresh",
+				text: "Refresh",
+				title: "Refresh",
+				showText: false,
+				icon: "icon-refresh"
 			}],
 			executeAction: function (e) {
 				var cmd = e.get_commandName();
@@ -129,6 +135,9 @@ TFS.module("Bigsan.TFSExtensions.EnhancedTaskBoard", ["TFS.Host"], function () {
 						$(".taskboard-row-summary:not(:visible)").each((idx, el) => {
 							$(el).prev().find(".taskboard-expander").click();
 						});
+						break;
+					case "refresh":
+						TFS.Host.ActionManager.performAction(TFS.Host.CommonActions.ACTION_WINDOW_RELOAD);
 						break;
 				}
 			}

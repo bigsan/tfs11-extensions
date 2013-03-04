@@ -90,6 +90,13 @@ TFS.module("Bigsan.TFSExtensions.EnhancedTaskBoard", [
                     title: _res.CollapseAllToolTip,
                     showText: false,
                     icon: "icon-tree-collapse-all"
+                }, 
+                {
+                    id: "refresh",
+                    text: "Refresh",
+                    title: "Refresh",
+                    showText: false,
+                    icon: "icon-refresh"
                 }
             ],
             executeAction: function (e) {
@@ -104,6 +111,9 @@ TFS.module("Bigsan.TFSExtensions.EnhancedTaskBoard", [
                         $(".taskboard-row-summary:not(:visible)").each(function (idx, el) {
                             $(el).prev().find(".taskboard-expander").click();
                         });
+                        break;
+                    case "refresh":
+                        TFS.Host.ActionManager.performAction(TFS.Host.CommonActions.ACTION_WINDOW_RELOAD);
                         break;
                 }
             }

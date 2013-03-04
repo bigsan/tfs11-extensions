@@ -17,6 +17,12 @@ interface TFSInterface {
 			};
 			attachNavigate(action: string, handler: Function, checkCurrentState: bool);
 		};
+		ActionManager: {
+			performAction(action: string);
+		};
+		CommonActions: {
+			ACTION_WINDOW_RELOAD;
+		};
 		TfsContext: {
 			getDefault(): {
 				confituration;
