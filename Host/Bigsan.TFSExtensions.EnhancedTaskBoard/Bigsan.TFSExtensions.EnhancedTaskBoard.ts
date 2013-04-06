@@ -8,7 +8,7 @@ TFS.module("Bigsan.TFSExtensions.EnhancedTaskBoard", ["TFS.Host"], function () {
 	var _res = TFS.Resources.Common;
 
 	var nav = TFS.Host.TfsContext.getDefault().navigation;
-	var _currentRoute = nav.currentController + "." + nav.currentAction;
+	var _currentRoute = (nav.currentController + "." + nav.currentAction).toLowerCase();
 	log("_currentRoute: " + _currentRoute);
 
 	// Route			Module loaded last
@@ -45,6 +45,7 @@ TFS.module("Bigsan.TFSExtensions.EnhancedTaskBoard", ["TFS.Host"], function () {
 						'.daysAgo + .witTitle > .wiid { margin-left: 4px; }',
 
 						'.tile-dimmed { opacity: 0.2; }',
+						'.tbTileContent.recent-1day { border-left-color: rgb(160, 215, 149); }',
 						'</style>'].join("");
 		$("head").append(styleHtml);
 	}
@@ -81,11 +82,13 @@ TFS.module("Bigsan.TFSExtensions.EnhancedTaskBoard", ["TFS.Host"], function () {
 		var daysAgoElement = $("<div class='daysAgo'>" + daysAgo.toFixed(1) + "d</div>")
 			.attr("title", "Last Changed: " + data.changedDate.toLocaleString());
 		if (daysAgo < 2) daysAgoElement.addClass("recent");
+		if (daysAgo <= 1) daysAgoElement.addClass("recent-1day");
 
 
 		var tile = $("#tile-" + id);
 		tile.find(".daysAgo").remove();
 		tile.find(".witExtra").prepend(daysAgoElement.clone());
+		if (daysAgo <= 1) tile.find(".tbTileContent").addClass("recent recent-1day");
 
 		var pbiCell = $("#taskboard-table_p" + id);
 		if (pbiCell.length > 0 && action == "stories") {
@@ -202,7 +205,7 @@ TFS.module("Bigsan.TFSExtensions.EnhancedTaskBoard", ["TFS.Host"], function () {
 			header.animate({ "margin-top": 0 });
 			content.animate({ "top": "91px" });
 		}
-		if (_currentRoute == "backlogs.index") {
+		if (_currentRoute == "backlogs.index" || _currentRoute == "backlogs.iteration") {
 			$.queue($(".content-section")[0], "fx", function () {
 				$(".productbacklog-grid-results").resize();
 				$.dequeue(this);
@@ -210,6 +213,22 @@ TFS.module("Bigsan.TFSExtensions.EnhancedTaskBoard", ["TFS.Host"], function () {
 		}
 	}
 
+	function beginGetParentPBI(id, callback) {
+		_wiManager.beginGetWorkItem(id, function (workItem) {
+			var links = workItem.getLinks();
+			var parentLink = null;
+			$.each(links, function (idx, link) {
+				if (link.baseLinkType == "WorkItemLink" && link.getLinkTypeEnd().name == "Parent") {
+					parentLink = link;
+					return false;
+				}
+			});
+			var parentId = parentLink.getTargetId();
+			_wiManager.beginGetWorkItem(parentId, function (workItem) {
+				callback(workItem);
+			});
+		});
+	}
 
 	// common view
 	injectAmplifyJS();
@@ -223,6 +242,37 @@ TFS.module("Bigsan.TFSExtensions.EnhancedTaskBoard", ["TFS.Host"], function () {
 		amplify.store("maxWorkspace", val);
 	});
 	toggleMaximizeWorkspace(maxWorkspace);
+
+
+	// show parent PBI on board hover
+	$("#taskboard")
+		.delegate(".tbTile", "mousemove", function (e) {
+			var hint = $("#parentPBIHint");
+			if (hint.length == 0) {
+				hint = $("<div id='parentPBIHint'/>")
+					.css({
+						position: 'absolute', width: '126px', background: '#eee',
+						padding: "2px 8px", borderRadius: "0 5px 5px 0",
+						border: "1px solid brown", borderWidth: "1px 1px 1px 6px", borderColor: "black black black brown"
+					})
+					.appendTo("body");
+			}
+
+			var tile = $(this);
+			var id = tile.attr("id").match(/-(\d+)/)[1];
+			beginGetParentPBI(id, function (parentPBI) {
+				var title = parentPBI.id + ": " + parentPBI.getTitle();
+				hint.text(title);
+
+				var tileOffset = tile.offset();
+				tileOffset.left += 6;
+				tileOffset.top -= (hint.height() - 1);
+				hint.offset(tileOffset).show();
+			});
+			e.stopPropagation();
+		})
+		.delegate(".taskboard-cell", "mousemove", function () { $("#parentPBIHint").hide(); })
+		.scroll(function () { $("#parentPBIHint").hide(); });
 
 
 	// conditional view for specific action

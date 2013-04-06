@@ -58,6 +58,7 @@ interface TFSInterface {
 				getService(serviceType): {
 					workItemManager: {
 						attachWorkItemChanged(callback: (sender, ea: WorkItemChangedEventArgsInterface) => {});
+						beginGetWorkItem(id: string, callback: (workItem) => any);
 						beginGetWorkItems(ids: string[], callback: (workItems: any[]) => {});
 					};
 				};
