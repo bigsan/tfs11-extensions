@@ -54,7 +54,7 @@ interface TFSInterface {
 	};
 	OM: {
 		TfsTeamProjectCollection: {
-			getDefault(): {
+			getDefaultConnection(): {
 				getService(serviceType): {
 					workItemManager: {
 						attachWorkItemChanged(callback: (sender, ea: WorkItemChangedEventArgsInterface) => {});

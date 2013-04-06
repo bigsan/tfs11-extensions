@@ -1,8 +1,16 @@
-TFS.module("Bigsan.TFSExtensions.EnhancedTaskBoard", [
-    "TFS.Host"
-], function () {
-    var _wiManager = TFS.OM.TfsTeamProjectCollection.getDefault().getService(TFS.WorkItemTracking.WorkItemStore).workItemManager;
-    var _res = TFS.Resources.Common;
+define([
+    "require", 
+    "exports", 
+    "Presentation/Scripts/TFS/TFS", 
+    "Presentation/Scripts/TFS/TFS.Core", 
+    "Presentation/Scripts/TFS/TFS.Host", 
+    "Presentation/Scripts/TFS/TFS.OM", 
+    "Presentation/TestScripts/Resources/TFS.Resources.Common", 
+    "Presentation/Scripts/TFS/TFS.UI.Controls", 
+    "Presentation/Scripts/TFS/TFS.UI.Controls.Menus"
+], function (require, exports, tfs, Core, TFSHOST, TFSOM, CommonResources, Controls, MenuControls) {
+    var _wiManager = TFS.OM.TfsTeamProjectCollection.getDefaultConnection().getService(TFS.WorkItemTracking.WorkItemStore).workItemManager;
+    var _res = CommonResources;
     var nav = TFS.Host.TfsContext.getDefault().navigation;
     var _currentRoute = (nav.currentController + "." + nav.currentAction).toLowerCase();
     log("_currentRoute: " + _currentRoute);
@@ -82,7 +90,7 @@ TFS.module("Bigsan.TFSExtensions.EnhancedTaskBoard", [
     function addToolbarButtons() {
         $(".hub-pivot-content").css("top", "+=40px");
         $("<div class='toolbar hub-pivot-toolbar'></div>").insertAfter($(".hub-pivot"));
-        TFS.UI.Controls.Menus.MenuBar.createIn($(".hub-pivot-toolbar"), {
+        Controls.BaseControl.createIn(MenuControls.MenuBar, $(".hub-pivot-toolbar"), {
             items: [
                 {
                     id: "expandAll",
@@ -216,7 +224,7 @@ TFS.module("Bigsan.TFSExtensions.EnhancedTaskBoard", [
     injectAmplifyJS();
     var maxWorkspace = amplify.store("maxWorkspace");
     var maxWksFilter = addToggleFilter("maximize workspace", maxWorkspace ? "on" : "off");
-    TFS.Host.UI.PivotFilter.ensureEnhancements(maxWksFilter);
+    Controls.Enhancement.ensureEnhancements(maxWksFilter);
     maxWksFilter.bind("changed", function (n, t) {
         var val = t.value == "on";
         toggleMaximizeWorkspace(val);
