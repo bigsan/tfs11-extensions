@@ -60,12 +60,6 @@
   <ItemGroup>
     <TypeScriptCompile Include="Bigsan.TFSExtensions.EnhancedTaskBoard\Bigsan.TFSExtensions.EnhancedTaskBoard.ts" />
     <Content Include="Bigsan.TFSExtensions.EnhancedTaskBoard\amplify-1.1.0.min.js" />
-    <Content Include="Bigsan.TFSExtensions.EnhancedTaskBoard\Bigsan.TFSExtensions.EnhancedTaskBoard.js">
-      <DependentUpon>Bigsan.TFSExtensions.EnhancedTaskBoard.ts</DependentUpon>
-    </Content>
-    <Content Include="Bigsan.TFSExtensions.EnhancedTaskBoard\Bigsan.TFSExtensions.EnhancedTaskBoard.min.js">
-      <DependentUpon>Bigsan.TFSExtensions.EnhancedTaskBoard.ts</DependentUpon>
-    </Content>
     <None Include="Bigsan.TFSExtensions.EnhancedTaskBoard\d.ts\TFS11.d.ts" />
     <Content Include="Bigsan.TFSExtensions.EnhancedTaskBoard\manifest.xml">
       <SubType>Designer</SubType>
@@ -82,6 +76,8 @@
     <Content Include="MSBuild\Bigsan.TFSExtensions.EnhancedTaskBoard.build">
       <SubType>Designer</SubType>
     </Content>
+    <Content Include="Build\TypeScriptConfiguration.targets" />
+    <Content Include="packages.config" />
     <None Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
     </None>
@@ -114,6 +110,8 @@
       </FlavorProperties>
     </VisualStudio>
   </ProjectExtensions>
+  <Import Project="Build\TypeScriptConfiguration.targets" />
+  <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\TypeScript\Microsoft.TypeScript.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">

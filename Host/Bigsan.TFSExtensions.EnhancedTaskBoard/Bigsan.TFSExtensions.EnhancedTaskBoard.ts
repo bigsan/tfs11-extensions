@@ -10,7 +10,7 @@ define([
 	"Presentation/Scripts/TFS/TFS.Core",
 	"Presentation/Scripts/TFS/TFS.Host",
 	"Presentation/Scripts/TFS/TFS.OM",
-	"Presentation/TestScripts/Resources/TFS.Resources.Common",
+	"Presentation/Scripts/TFS/Resources/TFS.Resources.Common",
 	"Presentation/Scripts/TFS/TFS.UI.Controls",
 	"Presentation/Scripts/TFS/TFS.UI.Controls.Menus"
 ], function (require, exports, tfs, Core, TFSHOST, TFSOM, CommonResources, Controls, MenuControls) {
@@ -161,7 +161,7 @@ define([
 		return $(".tbTile, .taskboard-parent[id]").map((idx, item) => { return item.id.match(/\d+$/)[0]; }).get();
 	}
 
-	function queryWorkItems(ids: string[], callback: (wit_array: any[]) => {}): void {
+	function queryWorkItems(ids: string[], callback: (wit_array: any[]) => any): void {
 		_wiManager.beginGetWorkItems(ids, (items) => {
 			callback(items);
 		});

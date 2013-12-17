@@ -3,7 +3,7 @@ interface TFSInterface {
 	module(moduleName: string, deps: string[], callback: Function);
 
 	globalProgressIndicator: {
-		actionStarted(name, immediate?: bool);
+		actionStarted(name, immediate?: boolean);
 		actionCompleted(id);
 		getPendingActions();
 		getProgressElements();
@@ -15,7 +15,7 @@ interface TFSInterface {
 			getCurrentState(): {
 				action: string;
 			};
-			attachNavigate(action: string, handler: Function, checkCurrentState: bool);
+			attachNavigate(action: string, handler: Function, checkCurrentState: boolean);
 		};
 		ActionManager: {
 			performAction(action: string);
@@ -57,9 +57,9 @@ interface TFSInterface {
 			getDefaultConnection(): {
 				getService(serviceType): {
 					workItemManager: {
-						attachWorkItemChanged(callback: (sender, ea: WorkItemChangedEventArgsInterface) => {});
+						attachWorkItemChanged(callback: (sender, ea: WorkItemChangedEventArgsInterface) => any);
 						beginGetWorkItem(id: string, callback: (workItem) => any);
-						beginGetWorkItems(ids: string[], callback: (workItems: any[]) => {});
+						beginGetWorkItems(ids: string[], callback: (workItems: any[]) => any);
 					};
 				};
 			};
@@ -93,7 +93,7 @@ interface WorkItemChangedEventArgsInterface {
 }
 
 
-var TFS: TFSInterface;
+declare var TFS: TFSInterface;
 
 
 /* Work Item Field Mapping
