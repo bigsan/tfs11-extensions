@@ -1,0 +1,49 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+	<!-- http://blog.3d-logic.com/2012/10/16/msbuild-zip-task-without-external-dependencies/ -->
+	<UsingTask TaskName="Zip" TaskFactory="CodeTaskFactory" AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.v4.0.dll">
+		<ParameterGroup>
+			<InputFileNames ParameterType="Microsoft.Build.Framework.ITaskItem[]" Required="true" />
+			<OutputFileName ParameterType="System.String" Required="true" />
+			<OverwriteExistingFile ParameterType="System.Boolean" Required="false" />
+		</ParameterGroup>
+		<Task>
+			<Reference Include="System.IO.Compression" />
+			<Using Namespace="System.IO.Compression" />
+			<Code Type="Fragment" Language="cs">
+			<![CDATA[       
+				const int BufferSize = 64 * 1024;
+
+				var buffer = new byte[BufferSize];
+				var fileMode = OverwriteExistingFile ? FileMode.Create : FileMode.CreateNew;
+
+				using (var outputFileStream = new FileStream(OutputFileName, fileMode))
+				{
+					using (var archive = new ZipArchive(outputFileStream, ZipArchiveMode.Create))
+					{
+						foreach (var item in InputFileNames)
+						{
+							var inputFileName = item.ItemSpec;
+							var entryFileName = item.GetMetadata("ZipEntryFileName");
+							if (String.IsNullOrEmpty(entryFileName)) entryFileName = inputFileName;
+							var archiveEntry = archive.CreateEntry(Path.GetFileName(entryFileName));
+
+							using (var fs = new FileStream(inputFileName, FileMode.Open))
+							{
+								using (var zipStream = archiveEntry.Open())
+								{
+									int bytesRead = -1;
+									while ((bytesRead = fs.Read(buffer, 0, BufferSize)) > 0)
+									{
+										zipStream.Write(buffer, 0, bytesRead);
+									}
+								}
+							}
+						}
+					}
+				}
+			]]>
+			</Code>
+		</Task>
+	</UsingTask>
+</Project>
